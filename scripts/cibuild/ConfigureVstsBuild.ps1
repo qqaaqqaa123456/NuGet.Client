@@ -34,7 +34,10 @@ param
     [string]$FunctionalTestBuildId,
 
     [Parameter(Mandatory=$True)]
-    [string]$VstsRestApiRootUrl
+    [string]$VstsRestApiRootUrl,
+
+    [Parameter(Mandatory=$True)]
+    [string]$VstsPersonalAccessToken
 )
 
 Function Get-Version {
@@ -78,31 +81,52 @@ Function Update-VsixVersion {
     Write-Host "Updated the VSIX version [$oldVersion] => [$($root.Metadata.Identity.Version)]"
 }
 
-Function Update-BuildNumberForFunctionalTests {
+Function Queue-TestReleaseDef {
     param(
-        [string]$BuildId,
-        [string]$BuildNumber
+        [Parameter(Mandatory=$True)]
+        [string]$BuildNumber,
+        [Parameter(Mandatory=$True)]
+        [string]$PersonalAccessToken
     )
-    $url = "{0}/build/builds/{1}?api-version=2.0" -f $VstsRestApiRootUrl, $BuildId
-    $b = @{
-        buildNumber = $BuildNumber
-        sourceVersion = $env:BUILD_SOURCEVERSION
-    } | convertto-json
+    $Token = ':' + $PersonalAccessToken
+    
+    $Base64Token = [System.Convert]::ToBase64String([char[]]$Token)
+    $Headers= @{
+        Authorization='Basic {0}' -f $Base64Token;
+    }
+    $url = "https://devdiv.vsrm.visualstudio.com/DefaultCollection/devdiv/_apis/Release/Releases?api-version=4.0-preview.4"
+    Write-Host $url
+    $b = 
+        @{
+            definitionId="401"
+            isDraft="false"
+            manualEnvironments=@()
+            description="Running tests for $BuildNumber"
+            artifacts=@(
+                @{
+                    alias="NuGet.Client"
+                    instanceReference=@{
+                        sourceBranch=$env:BUILD_SOURCEBRANCHNAME
+                        id=$env:BUILD_SOURCEVERSION
+                    }
+                },
+                @{
+                    alias=$env:BUILD_DEFINITIONNAME
+                    instanceReference=@{
+                        name=$BuildNumber
+                        id=$env:BUILD_BUILDID
+                        sourceBranch=$env:BUILD_SOURCEBRANCH
+                        sourceVersion=$env:BUILD_SOURCEVERSION
+                        sourceRepositoryId="https://github.com/NuGet/NuGet.Client.git"
+                    }
+                }
+            )
+        } | convertto-json -Depth 4
+    
     Write-Host $b
-    $build = Invoke-RestMethod -Uri $url -Method PATCH -Body $b -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" } -ContentType "application/json" 
-    $build
-}
-
-Function Queue-FunctionalTests {
-    param(
-        [string]$BuildNumber
-    )
-    $url = "{0}/build/builds?api-version=2.0" -f $VstsRestApiRootUrl
-    $b = @{definition=@{id=$FunctionalTestBuildId};sourceBranch=$env:BUILD_SOURCEBRANCH} | convertto-json 
-    $build = Invoke-RestMethod -Uri $url -Method POST -Body $b -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" } -ContentType "application/json" 
+    $build = Invoke-RestMethod -Uri $url -Method POST -Body $b -Headers $Headers -ContentType "application/json" 
     $build 
     $funcTestId = $build.id
-    Update-BuildNumberForFunctionalTests -BuildId $funcTestId -BuildNumber $BuildNumber
 }
 
 $msbuildExe = 'C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\bin\msbuild.exe'
@@ -211,5 +235,5 @@ else
     }
     Update-VsixVersion -manifestName source.extension.vs15.vsixmanifest -ReleaseProductVersion $productVersion -buildNumber $newBuildCounter
     Update-VsixVersion -manifestName source.extension.vs15.insertable.vsixmanifest -ReleaseProductVersion $productVersion -buildNumber $newBuildCounter
-    Queue-FunctionalTests -BuildNumber $newBuildCounter
+    Queue-TestReleaseDef -BuildNumber $newBuildCounter -PersonalAccessToken $VstsPersonalAccessToken
 }
