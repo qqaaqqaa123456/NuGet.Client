@@ -635,3 +635,20 @@ function Test-PackageReferenceProjectGetPackageTransitive {
 function TestCases-PackageReferenceProjectGetPackageTransitive{
     BuildProjectTemplateTestCases 'ClassLibrary' , 'PackageReferenceClassLibrary', 'BuildIntegratedClassLibrary'
 }
+function Test-BuildIntegratedGetIncompatibleError {
+    [SkipTestForVS14()]
+
+    $projectR = New-Project Net45BuildIntegratedClassLibrary
+    $projectT = New-Project PackageReferenceClassLibrary
+
+    $projectR | Add-ProjectReference -ProjectTo $projectT
+
+    Clean-Solution
+
+    $projectT = $projectT | Select-Object UniqueName, ProjectName, FullName
+
+    # Act (Restore)
+    Build-Solution
+
+    Assert-ProjectJsonLockFileErrorCode $projectR NU1201
+}
