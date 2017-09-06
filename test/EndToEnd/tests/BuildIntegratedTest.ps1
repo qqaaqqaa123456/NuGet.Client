@@ -635,6 +635,7 @@ function Test-PackageReferenceProjectGetPackageTransitive {
 function TestCases-PackageReferenceProjectGetPackageTransitive{
     BuildProjectTemplateTestCases 'ClassLibrary' , 'PackageReferenceClassLibrary', 'BuildIntegratedClassLibrary'
 }
+
 function Test-BuildIntegratedGetIncompatibleError {
     [SkipTestForVS14()]
 
@@ -642,10 +643,8 @@ function Test-BuildIntegratedGetIncompatibleError {
     $projectT = New-Project PackageReferenceClassLibrary
 
     $projectR | Add-ProjectReference -ProjectTo $projectT
-
+    
     Clean-Solution
-
-    $projectT = $projectT | Select-Object UniqueName, ProjectName, FullName
 
     # Act (Restore)
     Build-Solution

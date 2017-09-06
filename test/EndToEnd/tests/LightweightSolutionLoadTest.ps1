@@ -325,6 +325,28 @@ function TestCases-DeferredBuildIntegratedProjectGetPackageTransitive{
     BuildProjectTemplateTestCases 'PackageReferenceClassLibrary', 'BuildIntegratedClassLibrary'
 }
 
+function Test-DeferredBuildIntegratedGetIncompatibleError {
+    [SkipTestForVS14()]
+      
+    $projectR = New-Project Net45BuildIntegratedClassLibrary #project.json
+    $projectT = New-Project PackageReferenceClassLibrary #this is a net46 library, incompatible
+
+    $projectR | Add-ProjectReference -ProjectTo $projectT
+
+    Clean-Solution
+
+    $projectR = $projectR | Select-Object UniqueName, ProjectName, FullName
+
+    Enable-LightweightSolutionLoad -Reload
+
+    # Act (Restore)
+    Build-Solution
+
+    Assert-True ($projectR | Test-Project -IsDeferred) -Message 'Test project should stay in deferred mode'
+    
+    Assert-ProjectJsonLockFileErrorCode $projectR NU1201
+}
+
 function Test-DeferredProjectClean {
 
     [SkipTestForVS14()]
