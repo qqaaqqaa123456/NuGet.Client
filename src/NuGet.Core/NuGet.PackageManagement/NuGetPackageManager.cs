@@ -710,44 +710,49 @@ namespace NuGet.PackageManagement
             var allActions = await Task.WhenAll(tasks);
             nugetActions.AddRange(allActions.SelectMany(action => action));
 
-            foreach (var project in nonBuildIntegratedProjects)
+            using (var sourceCacheContext = new SourceCacheContext())
             {
-                var packagesToUpdateInProject = packageIdentities;
-                var updatedResolutionContext = resolutionContext;
-
-                if (shouldFilterProjectsForUpdate)
+                sourceCacheContext.MaxAge = DateTimeOffset.UtcNow;
+                foreach (var project in nonBuildIntegratedProjects)
                 {
-                    packagesToUpdateInProject = await GetPackagesToUpdateInProject(project, packageIdentities, token);
-                    if (packagesToUpdateInProject.Count > 0)
-                    {
-                        var includePrerelease = packagesToUpdateInProject.Any(
-                        package => package.HasVersion && package.Version.IsPrerelease);
+                    var packagesToUpdateInProject = packageIdentities;
+                    var updatedResolutionContext = resolutionContext;
 
-                        updatedResolutionContext = new ResolutionContext(
-                            dependencyBehavior: resolutionContext.DependencyBehavior,
-                            includePrelease: includePrerelease,
-                            includeUnlisted: resolutionContext.IncludeUnlisted,
-                            versionConstraints: resolutionContext.VersionConstraints,
-                            gatherCache: resolutionContext.GatherCache);
-                    }
-                    else
+                    if (shouldFilterProjectsForUpdate)
                     {
-                        // skip running update preview for this project, since it doesn't have any package installed
-                        // which is being updated.
-                        continue;
+                        packagesToUpdateInProject = await GetPackagesToUpdateInProject(project, packageIdentities, token);
+                        if (packagesToUpdateInProject.Count > 0)
+                        {
+                            var includePrerelease = packagesToUpdateInProject.Any(
+                            package => package.HasVersion && package.Version.IsPrerelease);
+
+                            updatedResolutionContext = new ResolutionContext(
+                                dependencyBehavior: resolutionContext.DependencyBehavior,
+                                includePrelease: includePrerelease,
+                                includeUnlisted: resolutionContext.IncludeUnlisted,
+                                versionConstraints: resolutionContext.VersionConstraints,
+                                gatherCache: resolutionContext.GatherCache);
+                        }
+                        else
+                        {
+                            // skip running update preview for this project, since it doesn't have any package installed
+                            // which is being updated.
+                            continue;
+                        }
                     }
+
+                    // packages.config based projects are handled here
+                    nugetActions.AddRange(await PreviewUpdatePackagesForClassicAsync(
+                    packageId,
+                    packagesToUpdateInProject,
+                    project,
+                    updatedResolutionContext,
+                    nuGetProjectContext,
+                    primarySources,
+                    secondarySources,
+                    sourceCacheContext,
+                    token));
                 }
-
-                // packages.config based projects are handled here
-                nugetActions.AddRange(await PreviewUpdatePackagesForClassicAsync(
-                packageId,
-                packagesToUpdateInProject,
-                project,
-                updatedResolutionContext,
-                nuGetProjectContext,
-                primarySources,
-                secondarySources,
-                token));
             }
 
             return nugetActions;
@@ -958,6 +963,7 @@ namespace NuGet.PackageManagement
                 INuGetProjectContext nuGetProjectContext,
                 IEnumerable<SourceRepository> primarySources,
                 IEnumerable<SourceRepository> secondarySources,
+                SourceCacheContext sourceCacheContext,
                 CancellationToken token)
         {
             var log = new LoggerAdapter(nuGetProjectContext);
@@ -1109,7 +1115,8 @@ namespace NuGet.PackageManagement
                     ResolutionContext = resolutionContext,
                     AllowDowngrades = allowDowngrades,
                     ProjectContext = nuGetProjectContext,
-                    IsUpdateAll = isUpdateAll
+                    IsUpdateAll = isUpdateAll,
+                    SourceCacheContext = sourceCacheContext
                 };
 
                 var availablePackageDependencyInfoWithSourceSet = await ResolverGather.GatherAsync(gatherContext, token);
@@ -1133,7 +1140,7 @@ namespace NuGet.PackageManagement
                     var packages = new List<SourcePackageDependencyInfo>();
                     foreach (var installedPackage in projectInstalledPackageReferences)
                     {
-                        var packageInfo = await packagesFolderResource.ResolvePackage(installedPackage.PackageIdentity, targetFramework, log, token);
+                        var packageInfo = await packagesFolderResource.ResolvePackage(installedPackage.PackageIdentity, targetFramework, sourceCacheContext, log, token);
                         if (packageInfo != null)
                         {
                             availablePackageDependencyInfoWithSourceSet.Add(packageInfo);
@@ -1589,20 +1596,26 @@ namespace NuGet.PackageManagement
 
                     var primaryPackages = new List<PackageIdentity> { packageIdentity };
 
-                    var gatherContext = new GatherContext()
-                    {
-                        InstalledPackages = oldListOfInstalledPackages.ToList(),
-                        PrimaryTargets = primaryPackages,
-                        TargetFramework = targetFramework,
-                        PrimarySources = primarySources.ToList(),
-                        AllSources = effectiveSources.ToList(),
-                        PackagesFolderSource = PackagesFolderSourceRepository,
-                        ResolutionContext = resolutionContext,
-                        AllowDowngrades = downgradeAllowed,
-                        ProjectContext = nuGetProjectContext
-                    };
+                    HashSet<SourcePackageDependencyInfo> availablePackageDependencyInfoWithSourceSet = null;
 
-                    var availablePackageDependencyInfoWithSourceSet = await ResolverGather.GatherAsync(gatherContext, token);
+                    using (var sourceCacheContext = new SourceCacheContext())
+                    {
+                        var gatherContext = new GatherContext()
+                        {
+                            InstalledPackages = oldListOfInstalledPackages.ToList(),
+                            PrimaryTargets = primaryPackages,
+                            TargetFramework = targetFramework,
+                            PrimarySources = primarySources.ToList(),
+                            AllSources = effectiveSources.ToList(),
+                            PackagesFolderSource = PackagesFolderSourceRepository,
+                            ResolutionContext = resolutionContext,
+                            AllowDowngrades = downgradeAllowed,
+                            ProjectContext = nuGetProjectContext,
+                            SourceCacheContext = sourceCacheContext
+                        };
+
+                        availablePackageDependencyInfoWithSourceSet = await ResolverGather.GatherAsync(gatherContext, token);
+                    }
 
                     // emit gather dependency telemetry event and restart timer
                     TelemetryServiceUtility.EmitEventAndRestartTimer(telemetryHelper,
@@ -1776,45 +1789,48 @@ namespace NuGet.PackageManagement
 
             var results = new Queue<KeyValuePair<SourceRepository, Task<bool>>>();
 
-            foreach (var sourceRepository in sourceRepositories)
+            using (var sourceCacheContext = new SourceCacheContext())
             {
-                // TODO: fetch the resource in parallel also
-                var metadataResource = await sourceRepository.GetResourceAsync<MetadataResource>();
-                if (metadataResource != null)
+                foreach (var sourceRepository in sourceRepositories)
                 {
-                    var task = Task.Run(() => metadataResource.Exists(packageIdentity, logger, tokenSource.Token), tokenSource.Token);
-                    results.Enqueue(new KeyValuePair<SourceRepository, Task<bool>>(sourceRepository, task));
-                }
-            }
-
-            while (results.Count > 0)
-            {
-                var pair = results.Dequeue();
-
-                try
-                {
-                    var exists = await pair.Value;
-
-                    // take only the first true result, but continue waiting for the remaining cancelled
-                    // tasks to keep things from getting out of control.
-                    if (source == null && exists)
+                    // TODO: fetch the resource in parallel also
+                    var metadataResource = await sourceRepository.GetResourceAsync<MetadataResource>();
+                    if (metadataResource != null)
                     {
-                        source = pair.Key;
-
-                        // there is no need to finish trying the others
-                        tokenSource.Cancel();
+                        var task = Task.Run(() => metadataResource.Exists(packageIdentity, sourceCacheContext, logger, tokenSource.Token), tokenSource.Token);
+                        results.Enqueue(new KeyValuePair<SourceRepository, Task<bool>>(sourceRepository, task));
                     }
                 }
-                catch (OperationCanceledException)
+
+                while (results.Count > 0)
                 {
-                    // ignore these
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(
-                        string.Format(Strings.Warning_ErrorFindingRepository,
-                            pair.Key.PackageSource.Source,
-                            ExceptionUtilities.DisplayMessage(ex)));
+                    var pair = results.Dequeue();
+
+                    try
+                    {
+                        var exists = await pair.Value;
+
+                        // take only the first true result, but continue waiting for the remaining cancelled
+                        // tasks to keep things from getting out of control.
+                        if (source == null && exists)
+                        {
+                            source = pair.Key;
+
+                            // there is no need to finish trying the others
+                            tokenSource.Cancel();
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // ignore these
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(
+                            string.Format(Strings.Warning_ErrorFindingRepository,
+                                pair.Key.PackageSource.Source,
+                                ExceptionUtilities.DisplayMessage(ex)));
+                    }
                 }
             }
 
@@ -1969,12 +1985,16 @@ namespace NuGet.PackageManagement
 
                 var dependencyInfoResource = await PackagesFolderSourceRepository.GetResourceAsync<DependencyInfoResource>();
 
-                foreach (var package in packageIdentities)
+                using (var sourceCacheContext = new SourceCacheContext())
                 {
-                    var packageDependencyInfo = await dependencyInfoResource.ResolvePackage(package, nuGetFramework, Common.NullLogger.Instance, CancellationToken.None);
-                    if (packageDependencyInfo != null)
+                    foreach (var package in packageIdentities)
                     {
-                        results.Add(packageDependencyInfo);
+                        var packageDependencyInfo = await dependencyInfoResource.ResolvePackage(package, nuGetFramework, sourceCacheContext,
+                            Common.NullLogger.Instance, CancellationToken.None);
+                        if (packageDependencyInfo != null)
+                        {
+                            results.Add(packageDependencyInfo);
+                        }
                     }
                 }
 
@@ -3112,16 +3132,19 @@ namespace NuGet.PackageManagement
         {
             var tasks = new List<Task<ResolvedPackage>>();
 
-            foreach (var source in sources)
+            using (var sourceCacheContext = new SourceCacheContext())
             {
-                tasks.Add(Task.Run(async ()
-                    => await GetLatestVersionCoreAsync(packageId, framework, resolutionContext, source, log, token)));
+                foreach (var source in sources)
+                {
+                    tasks.Add(Task.Run(async ()
+                        => await GetLatestVersionCoreAsync(packageId, framework, resolutionContext, source, sourceCacheContext, log, token)));
+                }
+
+                var resolvedPackages = await Task.WhenAll(tasks);
+                var latestVersion = resolvedPackages.Select(v => v.LatestVersion).Where(v => v != null).Max();
+
+                return new ResolvedPackage(latestVersion, resolvedPackages.Any(p => p.Exists));
             }
-
-            var resolvedPackages = await Task.WhenAll(tasks);
-            var latestVersion = resolvedPackages.Select(v => v.LatestVersion).Where(v => v != null).Max();
-
-            return new ResolvedPackage(latestVersion, resolvedPackages.Any(p => p.Exists));
         }
 
         private static async Task<ResolvedPackage> GetLatestVersionCoreAsync(
@@ -3129,6 +3152,7 @@ namespace NuGet.PackageManagement
             NuGetFramework framework,
             ResolutionContext resolutionContext,
             SourceRepository source,
+            SourceCacheContext sourceCacheContext,
             Common.ILogger log,
             CancellationToken token)
         {
@@ -3137,7 +3161,7 @@ namespace NuGet.PackageManagement
             // Resolve the package for the project framework and cache the results in the
             // resolution context for the gather to use during the next step.
             // Using the metadata resource will result in multiple calls to the same url during an install.
-            var packages = (await dependencyInfoResource.ResolvePackages(packageId, framework, log, token)).ToList();
+            var packages = (await dependencyInfoResource.ResolvePackages(packageId, framework, sourceCacheContext, log, token)).ToList();
 
             Debug.Assert(resolutionContext.GatherCache != null);
 

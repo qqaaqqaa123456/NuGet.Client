@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -651,27 +651,29 @@ namespace NuGet.PackageManagement.UI
 
             var allPackages = packages.ToArray();
 
-            // first check all the packages with local sources.
-            var completed = (await TaskCombinators.ThrottledAsync(
-                allPackages,
-                (p, t) => GetPackageMetadataAsync(localSources, p, t),
-                token)).Where(metadata => metadata != null).ToArray();
-
-            results.AddRange(completed);
-
-            if (completed.Length != allPackages.Length)
+            using (var sourceCacheContext = new SourceCacheContext())
             {
-                // get remaining package's metadata from remote repositories
-                var remainingPackages = allPackages.Where(package => !completed.Any(pack => pack.Identity.Equals(package)));
-
-                var remoteResults = (await TaskCombinators.ThrottledAsync(
-                    remainingPackages,
-                    (p, t) => GetPackageMetadataAsync(sources, p, t),
+                // first check all the packages with local sources.
+                var completed = (await TaskCombinators.ThrottledAsync(
+                    allPackages,
+                    (p, t) => GetPackageMetadataAsync(localSources, sourceCacheContext, p, t),
                     token)).Where(metadata => metadata != null).ToArray();
 
-                results.AddRange(remoteResults);
-            }
+                results.AddRange(completed);
 
+                if (completed.Length != allPackages.Length)
+                {
+                    // get remaining package's metadata from remote repositories
+                    var remainingPackages = allPackages.Where(package => !completed.Any(pack => pack.Identity.Equals(package)));
+
+                    var remoteResults = (await TaskCombinators.ThrottledAsync(
+                        remainingPackages,
+                        (p, t) => GetPackageMetadataAsync(sources, sourceCacheContext, p, t),
+                        token)).Where(metadata => metadata != null).ToArray();
+
+                    results.AddRange(remoteResults);
+                }
+            }
             // check if missing metadata for any package
             if (allPackages.Length != results.Count)
             {
@@ -692,6 +694,7 @@ namespace NuGet.PackageManagement.UI
 
         private static async Task<IPackageSearchMetadata> GetPackageMetadataAsync(
             IEnumerable<SourceRepository> sources,
+            SourceCacheContext sourceCacheContext,
             PackageIdentity package,
             CancellationToken token)
         {
@@ -709,6 +712,7 @@ namespace NuGet.PackageManagement.UI
                 {
                     var packageMetadata = await metadataResource.GetMetadataAsync(
                         package,
+                        sourceCacheContext,
                         log: Common.NullLogger.Instance,
                         token: token);
                     if (packageMetadata != null)

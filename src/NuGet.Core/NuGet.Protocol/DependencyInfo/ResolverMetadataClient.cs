@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -30,10 +30,11 @@ namespace NuGet.Protocol
             HttpSource httpClient,
             Uri registrationUri,
             VersionRange range,
+            SourceCacheContext cacheContext,
             ILogger log,
             CancellationToken token)
         {
-            var ranges = await Utils.LoadRanges(httpClient, registrationUri, range, log, token);
+            var ranges = await Utils.LoadRanges(httpClient, registrationUri, range, cacheContext, log, token);
 
             var results = new HashSet<RemoteSourceDependencyInfo>();
             foreach (var rangeObj in ranges)
@@ -116,13 +117,14 @@ namespace NuGet.Protocol
             HttpSource httpClient,
             Uri registrationUri,
             VersionRange range,
+            SourceCacheContext cacheContext,
             NuGetFramework projectTargetFramework,
             ILogger log,
             CancellationToken token)
         {
             var frameworkComparer = new NuGetFrameworkFullComparer();
             var frameworkReducer = new FrameworkReducer();
-            var dependencies = await GetDependencies(httpClient, registrationUri, range, log, token);
+            var dependencies = await GetDependencies(httpClient, registrationUri, range, cacheContext, log, token);
 
             var result = new HashSet<RegistrationInfo>();
             var registrationInfo = new RegistrationInfo();

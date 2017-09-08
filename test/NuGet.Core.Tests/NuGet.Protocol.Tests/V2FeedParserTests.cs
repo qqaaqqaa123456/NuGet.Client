@@ -1,4 +1,4 @@
-﻿// Copyright (c) .NET Foundation. All rights reserved.
+// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Moq;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Packaging.Core;
@@ -38,6 +39,7 @@ namespace NuGet.Protocol.Tests
             // Act
             var packages = await parser.FindPackagesByIdAsync(
                 "WindowsAzure.Storage",
+                It.IsAny<SourceCacheContext>(),
                 NullLogger.Instance,
                 CancellationToken.None);
 
@@ -66,7 +68,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var packages = await parser.FindPackagesByIdAsync("ravendb.client", NullLogger.Instance, CancellationToken.None);
+            var packages = await parser.FindPackagesByIdAsync("ravendb.client", It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(300, packages.Count());
@@ -88,7 +90,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var packages = await parser.FindPackagesByIdAsync("WindowsAzure.Storage", NullLogger.Instance, CancellationToken.None);
+            var packages = await parser.FindPackagesByIdAsync("WindowsAzure.Storage", It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             var latest = packages.OrderByDescending(e => e.Version, VersionComparer.VersionRelease).FirstOrDefault();
 
@@ -132,7 +134,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             //// Act
-            var packages = await parser.FindPackagesByIdAsync("afine", NullLogger.Instance, CancellationToken.None);
+            var packages = await parser.FindPackagesByIdAsync("afine", It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             var first = packages[0];
             var second = packages[1];
@@ -166,6 +168,7 @@ namespace NuGet.Protocol.Tests
                     new PackageIdentity("xunit", new NuGetVersion("1.0.0-notfound")),
                     new PackageDownloadContext(cacheContext),
                     packagesFolder,
+                    It.IsAny<SourceCacheContext>(),
                     NullLogger.Instance,
                     CancellationToken.None);
 
@@ -412,7 +415,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var package = await parser.GetPackage(new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview")), NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview")), It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("WindowsAzure.Storage", package.Id);
@@ -456,7 +459,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var package = await parser.GetPackage(new PackageIdentity("xunit", new NuGetVersion("1.0.0-notfound")), NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(new PackageIdentity("xunit", new NuGetVersion("1.0.0-notfound")), It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Null(package);
@@ -480,7 +483,7 @@ namespace NuGet.Protocol.Tests
             var packageIdentity = new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview"));
 
             // Act
-            var package = await parser.GetPackage(packageIdentity, NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(packageIdentity, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("WindowsAzure.Storage", package.Id);
@@ -527,6 +530,7 @@ namespace NuGet.Protocol.Tests
 
             var exception = await Assert.ThrowsAsync<FatalProtocolException>(() => parser.GetPackage(
                 packageIdentity,
+                It.IsAny<SourceCacheContext>(),
                 NullLogger.Instance,
                 CancellationToken.None));
 
@@ -555,6 +559,7 @@ namespace NuGet.Protocol.Tests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<FatalProtocolException>(() => parser.GetPackage(
                 packageIdentity,
+                It.IsAny<SourceCacheContext>(),
                 NullLogger.Instance,
                 CancellationToken.None));
             Assert.Equal(
@@ -581,6 +586,7 @@ namespace NuGet.Protocol.Tests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<FatalProtocolException>(() => parser.FindPackagesByIdAsync(
                 "xunit",
+                It.IsAny<SourceCacheContext>(),
                 NullLogger.Instance,
                 CancellationToken.None));
 
@@ -608,6 +614,7 @@ namespace NuGet.Protocol.Tests
             // Act & Assert
             var exception = await Assert.ThrowsAsync<FatalProtocolException>(() => parser.FindPackagesByIdAsync(
                 "xunit",
+                It.IsAny<SourceCacheContext>(),
                 NullLogger.Instance,
                 CancellationToken.None));
 
@@ -634,7 +641,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var packages = await parser.FindPackagesByIdAsync("PackageA", NullLogger.Instance, CancellationToken.None);
+            var packages = await parser.FindPackagesByIdAsync("PackageA", It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             var latest = packages.OrderByDescending(e => e.Version, VersionComparer.VersionRelease).FirstOrDefault();
 
@@ -680,7 +687,7 @@ namespace NuGet.Protocol.Tests
             {
                 // Act
                 var packages =
-                    await parser.FindPackagesByIdAsync("ravendb.client", NullLogger.Instance, CancellationToken.None);
+                    await parser.FindPackagesByIdAsync("ravendb.client", It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
             }
             catch (FatalProtocolException ex)
             {
@@ -818,7 +825,7 @@ namespace NuGet.Protocol.Tests
             V2FeedParser parser = new V2FeedParser(httpSource, serviceAddress);
 
             // Act
-            var package = await parser.GetPackage(new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview")), NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview")), It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
 
             // Assert
             // Verify no failures from reading the stream
