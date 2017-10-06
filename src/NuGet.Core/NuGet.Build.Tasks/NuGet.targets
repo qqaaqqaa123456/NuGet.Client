@@ -96,9 +96,11 @@ Copyright (c) .NET Foundation. All rights reserved.
 
    <Target Name="GenerateTemporaryTargetAssembly"
                Condition="'$(_RequireMCPass2ForMainAssembly)' == 'true' " >
-
-      <Message Text="MSBuildProjectFile is $(MSBuildProjectFile)" Condition="'$(MSBuildTargetsVerbose)' == 'true'" />
-
+    <Message Text="MSBuildProjectFile is $(MSBuildProjectFile)" Condition="'$(MSBuildTargetsVerbose)' == 'true'" />
+    <PropertyGroup>
+      <_RestoreOutputPath Condition=" '$(RestoreOutputPath)' == '' " >$(BaseIntermediateOutputPath)</_RestoreOutputPath>
+    </PropertyGroup>
+              
      <GenerateTemporaryTargetAssemblyTask
               CurrentProject="$(MSBuildProjectFullPath)"
                 MSBuildBinPath="$(MSBuildBinPath)"
@@ -109,6 +111,7 @@ Copyright (c) .NET Foundation. All rights reserved.
                 IntermediateOutputPath="$(IntermediateOutputPath)"
                 AssemblyName="$(AssemblyName)"
                 CompileTargetName="$(_CompileTargetNameForLocalType)"
+                RestoreOutputPath="$(_RestoreOutputPath)"
                  >
 
        </GenerateTemporaryTargetAssemblyTask>

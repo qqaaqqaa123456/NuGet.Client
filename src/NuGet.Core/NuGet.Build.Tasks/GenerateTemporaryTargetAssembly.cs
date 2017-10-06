@@ -94,9 +94,10 @@ namespace NuGet.Build.Tasks
             try
             {
                 XmlDocument xmlProjectDoc = null;
-
                 xmlProjectDoc = new XmlDocument();
-                xmlProjectDoc.LoadXml(CurrentProject);
+                var currentDocStream = File.OpenText(CurrentProject);
+                xmlProjectDoc.Load(currentDocStream);
+                currentDocStream.Dispose();
 
                 //
                 // remove all the WinFX specific item lists
@@ -131,24 +132,27 @@ namespace NuGet.Build.Tasks
 
                 var randProjInfo = new FileInfo(randProj);
                 // Save the xmlDocument content into the temporary project file.
-
-                File.WriteAllText(randProj, xmlProjectDoc.ToString());
-
-                Debugger.Launch();
-
-                var projectInfo = new FileInfo(CurrentProject);
-                var projectDirectoryInfo = projectInfo.Directory;
-                var intermediateOutputInfo = new DirectoryInfo(Path.Combine(projectDirectoryInfo.FullName, IntermediateOutputPath));
+                var writer = File.OpenWrite(randProj);
+                xmlProjectDoc.Save(writer);
+                writer.Dispose();
 
                 var propsAndTargets = new List<string>();
+                if (RestoreOutputPath != null)
+                { 
+                    var projectInfo = new FileInfo(CurrentProject);
+                    var projectDirectoryInfo = projectInfo.Directory;
+                    var intermediateOutputInfo = new DirectoryInfo(Path.Combine(projectDirectoryInfo.FullName, RestoreOutputPath));
 
-                foreach (var fileInfo in intermediateOutputInfo.GetFiles())
-                {
-                    if (fileInfo.Name.Equals($"{projectInfo.Name}.nuget.g.targets", StringComparison.OrdinalIgnoreCase) || fileInfo.Name.Equals($"{projectInfo.Name}.nuget.g.props", StringComparison.OrdinalIgnoreCase))
+
+                    foreach (var fileInfo in intermediateOutputInfo.GetFiles())
                     {
-                        var newFileName = Path.Combine(fileInfo.DirectoryName, $"{randProjInfo.Name}.nuget.g{fileInfo.Extension}");
-                        File.Copy(fileInfo.FullName,  newFileName);
-                        propsAndTargets.Add(newFileName);
+                        if (fileInfo.Name.Equals($"{projectInfo.Name}.nuget.g.targets", StringComparison.OrdinalIgnoreCase) || fileInfo.Name.Equals($"{projectInfo.Name}.nuget.g.props", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var newFileName = Path.Combine(fileInfo.DirectoryName, $"{randProjInfo.Name}.nuget.g{fileInfo.Extension}");
+                            Log.LogMessage($"Copying {fileInfo.FullName} to {newFileName}");
+                            File.Copy(fileInfo.FullName,  newFileName);
+                            propsAndTargets.Add(newFileName);
+                        }
                     }
                 }
 
@@ -319,6 +323,19 @@ namespace NuGet.Build.Tasks
         {
             get { return _compileTargetName; }
             set { _compileTargetName = value; }
+        }
+
+        /// <summary>
+        /// RestoreOutputPath
+        /// 
+        /// The value which is set to RestoreOutputPath property in current project file.
+        /// 
+        /// Passing this value explicitly is to make sure that the temporary 
+        /// </summary>
+        public string RestoreOutputPath
+        {
+            get { return _restoreOutputPath; }
+            set { _restoreOutputPath = value; }
         }
 
         #endregion Public Properties
@@ -513,6 +530,7 @@ namespace NuGet.Build.Tasks
 
         private string _msbuildBinPath;
 
+        private string _restoreOutputPath;
         private string _intermediateOutputPath;
         private string _assemblyName;
         private string _compileTargetName;
