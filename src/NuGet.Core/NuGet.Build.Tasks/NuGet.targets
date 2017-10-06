@@ -81,7 +81,45 @@ Copyright (c) .NET Foundation. All rights reserved.
   <UsingTask TaskName="NuGet.Build.Tasks.GetRestoreSolutionProjectsTask" AssemblyFile="$(RestoreTaskAssemblyFile)" />
   <UsingTask TaskName="NuGet.Build.Tasks.GetRestoreSettingsTask" AssemblyFile="$(RestoreTaskAssemblyFile)" />
   <UsingTask TaskName="NuGet.Build.Tasks.WarnForInvalidProjectsTask" AssemblyFile="$(RestoreTaskAssemblyFile)" />
+  <UsingTask TaskName="NuGet.Build.Tasks.GenerateTemporaryTargetAssemblyTask" AssemblyFile="$(RestoreTaskAssemblyFile)" />
 
+
+  <!--
+
+    ==========================================
+            GenerateTemporaryTargetAssembly
+    ==========================================
+
+    Name : GenerateTemporaryTargetAssembly
+
+  -->
+
+   <Target Name="GenerateTemporaryTargetAssembly"
+               Condition="'$(_RequireMCPass2ForMainAssembly)' == 'true' " >
+
+      <Message Text="MSBuildProjectFile is $(MSBuildProjectFile)" Condition="'$(MSBuildTargetsVerbose)' == 'true'" />
+
+     <GenerateTemporaryTargetAssemblyTask
+              CurrentProject="$(MSBuildProjectFullPath)"
+                MSBuildBinPath="$(MSBuildBinPath)"
+                ReferencePathTypeName="ReferencePath"
+                CompileTypeName="Compile"
+                GeneratedCodeFiles="@(_GeneratedCodeFiles)"
+                ReferencePath="@(ReferencePath)"
+                IntermediateOutputPath="$(IntermediateOutputPath)"
+                AssemblyName="$(AssemblyName)"
+                CompileTargetName="$(_CompileTargetNameForLocalType)"
+                 >
+
+       </GenerateTemporaryTargetAssemblyTask>
+
+       <CreateItem Include="$(IntermediateOutputPath)$(TargetFileName)" >
+               <Output TaskParameter="Include" ItemName="AssemblyForLocalTypeReference" />
+       </CreateItem>
+
+  </Target>
+
+  
   <!--
     ============================================================
     Restore
