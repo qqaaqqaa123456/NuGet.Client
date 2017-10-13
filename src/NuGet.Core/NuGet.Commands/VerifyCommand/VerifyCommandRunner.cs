@@ -2,10 +2,12 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using NuGet.Packaging;
+using NuGet.Packaging.Signing;
+using NuGet.Packaging.Test.SigningTests;
 
 namespace NuGet.Commands
 {
@@ -14,16 +16,43 @@ namespace NuGet.Commands
     /// </summary>
     public class VerifyCommandRunner : IVerifyCommandRunner
     {
-        public int ExecuteCommand(VerifyArgs verifyArgs)
+        public async Task<int> ExecuteCommandAsync(VerifyArgs verifyArgs)
         {
-            // check if the package exists
             if (!File.Exists(verifyArgs.PackagePath))
             {
-                // error to user
+                verifyArgs.Logger.LogError("Package provided does not exist.");
                 return 1;
             }
 
-            verifyArgs.Logger.LogInformation($"Succesfully verified {verifyArgs.PackagePath} with verbosity level {verifyArgs.LogLevel}");
+            var nupkg = new FileInfo(verifyArgs.PackagePath);
+            PackageArchiveReader package = null;
+
+            try
+            {
+                package = new PackageArchiveReader(nupkg.OpenRead());
+            }
+            catch (Exception e)
+            {
+                verifyArgs.Logger.LogError("Provided file is not a valid nupkg.");
+                return 1;
+            }
+
+            var packageIsSigned = await package.IsSignedAsync(CancellationToken.None);
+            if (!packageIsSigned)
+            {
+                verifyArgs.Logger.LogError("Package provided is not signed.");
+                return 1;
+            }
+
+            var trustProviders = new[] { new SignatureVerificationProvider() };
+            var verifier = new SignedPackageVerifier(trustProviders, SignedPackageVerifierSettings.RequireSigned);
+            var verifierResults = verifier.VerifySignaturesAsync(package, verifyArgs.Logger, CancellationToken.None);
+
+            // check results
+
+            // print info for result
+
+            verifyArgs.Logger.LogInformation("Successfully verified signature in package.");
 
             return 0;
         }

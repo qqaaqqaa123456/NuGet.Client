@@ -66,10 +66,7 @@ namespace NuGet.CommandLine
             }
 
             var verifyCommandRunner = new VerifyCommandRunner();
-
-            var result = verifyCommandRunner.ExecuteCommand(verifyArgs);
-
-            return Task.FromResult(result);
+            return verifyCommandRunner.ExecuteCommandAsync(verifyArgs);
         }
     }
 }
