@@ -14494,5 +14494,47 @@ namespace NuGet.CommandLine {
                 return ResourceManager.GetString("UpdateCommandVersionDescription", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verifies a signed NuGet package..
+        /// </summary>
+        internal static string VerifyCommandDescription {
+            get {
+                return ResourceManager.GetString("VerifyCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verify that the signer certificate matches with one of the specified fingerprints. A certificate fingerprint is a SHA-1 hash of the certificate used to identify the certificate. If more than one fingerprint is provided, the input should be a string with each fingerprint separated by a semicolon..
+        /// </summary>
+        internal static string VerifyCommandSignerDescription {
+            get {
+                return ResourceManager.GetString("VerifyCommandSignerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to nuget verify .\..\MyPackage.nupkg -Signer &quot;86C0E8C51FF0EBDAD355315DF82AA6EC7049B542;BE36A4562FB2EE05DBB3D32323ADF445084ED656&quot; -Verbosity detailed
+        ///
+        ///nuget verify c:\foo\MyPackage.nupkg -Signer BE36A4562FB2EE05DBB3D32323ADF445084ED656
+        ///
+        ///nuget verify MyPackage.nupkg -Verbosity quiet
+        ///
+        ///nuget verify .\..\MyPackage.nupkg.
+        /// </summary>
+        internal static string VerifyCommandUsageExamples {
+            get {
+                return ResourceManager.GetString("VerifyCommandUsageExamples", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;package_path&gt;  [options].
+        /// </summary>
+        internal static string VerifyCommandUsageSummary {
+            get {
+                return ResourceManager.GetString("VerifyCommandUsageSummary", resourceCulture);
+            }
+        }
     }
 }

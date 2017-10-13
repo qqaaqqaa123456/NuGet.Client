@@ -5345,4 +5345,24 @@ nuget locals global-packages -list</value>
   <data name="InstallCommandFrameworkDescription" xml:space="preserve">
     <value>Target framework used for selecting dependencies. Defaults to 'Any' if not specified.</value>
   </data>
+  <data name="VerifyCommandDescription" xml:space="preserve">
+    <value>Verifies a signed NuGet package.</value>
+  </data>
+  <data name="VerifyCommandSignerDescription" xml:space="preserve">
+    <value>Verify that the signer certificate matches with one of the specified fingerprints. A certificate fingerprint is a SHA-1 hash of the certificate used to identify the certificate. If more than one fingerprint is provided, the input should be a string with each fingerprint separated by a semicolon.</value>
+  </data>
+  <data name="VerifyCommandUsageExamples" xml:space="preserve">
+    <value>nuget verify .\..\MyPackage.nupkg -Signer "86C0E8C51FF0EBDAD355315DF82AA6EC7049B542;BE36A4562FB2EE05DBB3D32323ADF445084ED656" -Verbosity detailed
+
+nuget verify c:\foo\MyPackage.nupkg -Signer BE36A4562FB2EE05DBB3D32323ADF445084ED656
+
+nuget verify MyPackage.nupkg -Verbosity quiet
+
+nuget verify .\..\MyPackage.nupkg</value>
+    <comment>Please don't localize this string</comment>
+  </data>
+  <data name="VerifyCommandUsageSummary" xml:space="preserve">
+    <value>&lt;package_path&gt;  [options]</value>
+    <comment>Please don't localize this string</comment>
+  </data>
 </root>
