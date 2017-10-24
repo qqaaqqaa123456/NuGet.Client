@@ -7,7 +7,7 @@ using Xunit;
 
 namespace NuGet.Protocol.Tests
 {
-    public class UtilsTests
+    public class RegistrationUtilityTests
     {
         [Theory]
         [InlineData("", "(, )")]
@@ -22,7 +22,7 @@ namespace NuGet.Protocol.Tests
             var expected = VersionRange.Parse(expectedString);
 
             // Act
-            var actual = Utils.CreateVersionRange(input);
+            var actual = RegistrationUtility.CreateVersionRange(input);
 
             // Assert
             Assert.Equal(expected, actual);
@@ -35,7 +35,7 @@ namespace NuGet.Protocol.Tests
         public void CreateVersionRange_RejectsInvalid(string input)
         {
             var exception = Assert.Throws<ArgumentException>(
-                () => Utils.CreateVersionRange(input));
+                () => RegistrationUtility.CreateVersionRange(input));
             Assert.Equal($"'{input}' is not a valid version string.", exception.Message);
         }
     }

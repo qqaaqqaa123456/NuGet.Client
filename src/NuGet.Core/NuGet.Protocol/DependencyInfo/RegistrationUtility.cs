@@ -12,7 +12,7 @@ using NuGet.Versioning;
 
 namespace NuGet.Protocol
 {
-    internal static class Utils
+    public static class RegistrationUtility
     {
         public static VersionRange CreateVersionRange(string stringToParse)
         {
