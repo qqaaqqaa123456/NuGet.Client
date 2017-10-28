@@ -438,8 +438,11 @@ namespace NuGet.Protocol
             var uri = string.Format("{0}{1}", _baseAddress, relativeUri);
             uris.Add(uri);
 
+            // http cache key
+            var cacheKey = $"list_{relativeUri}_page{page}";
+
             // first request
-            Task<XDocument> docRequest = LoadXmlAsync(uri, id, page, ignoreNotFounds, sourceCacheContext, log, token);
+            Task<XDocument> docRequest = LoadXmlAsync(uri, cacheKey, ignoreNotFounds, sourceCacheContext, log, token);
 
             // TODO: re-implement caching at a higher level for both v2 and v3
             string nextUri = null;
@@ -478,7 +481,8 @@ namespace NuGet.Protocol
                                 nextUri));
                         }
 
-                        docRequest = LoadXmlAsync(nextUri, id, page, ignoreNotFounds, sourceCacheContext, log, token);
+                        cacheKey = $"list_{relativeUri}_page{page}";
+                        docRequest = LoadXmlAsync(nextUri, cacheKey, ignoreNotFounds, sourceCacheContext, log, token);
                     }
 
                     page++;
@@ -498,21 +502,20 @@ namespace NuGet.Protocol
 
         internal async Task<XDocument> LoadXmlAsync(
             string uri,
-            string id,
-            int page,
+            string cacheKey,
             bool ignoreNotFounds,
             SourceCacheContext sourceCacheContext,
             ILogger log,
             CancellationToken token)
         {
-            if (id != null && sourceCacheContext != null)
+            if (cacheKey != null && sourceCacheContext != null)
             {
                 var httpSourceCacheContext = HttpSourceCacheContext.Create(sourceCacheContext, 0);
 
                 return await _httpSource.GetAsync(
                     new HttpSourceCachedRequest(
                         uri,
-                        $"list_{id}_page{page}",
+                        cacheKey,
                         httpSourceCacheContext)
                     {
                         AcceptHeaderValues =
