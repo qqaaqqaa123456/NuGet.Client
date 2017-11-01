@@ -441,7 +441,9 @@ namespace NuGet.Protocol.Plugins
                 isKeepAlive,
                 cancellationToken);
 
-            _outboundRequestContexts.TryAdd(message.RequestId, requestContext);
+            var wasAdded = _outboundRequestContexts.TryAdd(message.RequestId, requestContext);
+
+            Console.WriteLine($"Request {message.RequestId} was {(wasAdded ? "" : "NOT ")}added to the outbound request contexts dictionary.");
 
             switch (type)
             {
@@ -498,6 +500,8 @@ namespace NuGet.Protocol.Plugins
 
             if (_outboundRequestContexts.TryGetValue(e.Message.RequestId, out requestContext))
             {
+                Console.WriteLine($"Request {e.Message.RequestId} was in the outbound request contexts dictionary.  Message type:  {e.Message.Type}.");
+
                 switch (e.Message.Type)
                 {
                     case MessageType.Response:
@@ -526,6 +530,8 @@ namespace NuGet.Protocol.Plugins
 
                 return;
             }
+
+            Console.WriteLine($"Request {e.Message.RequestId} was not in the outbound request contexts dictionary.  Message type:  {e.Message.Type}.");
 
             switch (e.Message.Type)
             {

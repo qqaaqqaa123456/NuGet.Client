@@ -122,9 +122,14 @@ namespace NuGet.PackageManagement
                     while (tasks.Any())
                     {
                         var completedTask = await Task.WhenAny(tasks);
+                        var sourceRepository = tasksLookup[completedTask];
+
+                        Console.WriteLine($"Download task completed ({completedTask.Status}).  Package {packageIdentity}.  Package source:  {sourceRepository.PackageSource?.Source}.");
 
                         if (completedTask.Status == TaskStatus.RanToCompletion)
                         {
+                            Console.WriteLine($"Download task ran to completion.  Package {packageIdentity}.  Package source:  {sourceRepository.PackageSource?.Source}.");
+
                             tasks.Remove(completedTask);
 
                             // Cancel the other tasks, since, they may still be running
@@ -180,7 +185,16 @@ namespace NuGet.PackageManagement
 
                 foreach (var task in failedTasks)
                 {
-                    var message = ExceptionUtilities.DisplayMessage(task.Exception);
+                    string message;
+
+                    if (task.Exception == null)
+                    {
+                        message = task.Status.ToString();
+                    }
+                    else
+                    {
+                        message = ExceptionUtilities.DisplayMessage(task.Exception);
+                    }
 
                     errors.AppendLine($"  {tasksLookup[task].PackageSource.Source}: {message}");
                 }

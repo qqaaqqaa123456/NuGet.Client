@@ -127,6 +127,8 @@ namespace NuGet.Protocol.Core.Types
 
             cancellationToken.ThrowIfCancellationRequested();
 
+            logger.LogDebug($"Plugin {_plugin.FilePath} (ID {_plugin.Id}) will handle download of package {packageIdentity} for package source {_packageSource.Source}.");
+
             var packageReader = new PluginPackageReader(_plugin, packageIdentity, _packageSource.Source);
             var packageDependency = new PluginPackageDownloader(_plugin, packageIdentity, packageReader, _packageSource.Source);
 
@@ -173,6 +175,8 @@ namespace NuGet.Protocol.Core.Types
             cancellationToken.ThrowIfCancellationRequested();
 
             AddOrUpdateLogger(_plugin, logger);
+
+            logger.LogDebug($"Plugin {_plugin.FilePath} (ID {_plugin.Id}) will handle retrieval of all package versions for package {id}.");
 
             await _utilities.DoOncePerPluginLifetimeAsync(
                 MessageMethod.SetLogLevel.ToString(),
@@ -230,6 +234,8 @@ namespace NuGet.Protocol.Core.Types
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+
+            logger.LogDebug($"Plugin {_plugin.FilePath} (ID {_plugin.Id}) will handle retrieval of dependency information for package {id} version {version}.");
 
             var packageInfos = await EnsurePackagesAsync(id, cacheContext, logger, cancellationToken);
 

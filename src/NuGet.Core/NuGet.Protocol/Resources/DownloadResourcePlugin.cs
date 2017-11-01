@@ -102,6 +102,8 @@ namespace NuGet.Protocol
 
             AddOrUpdateLogger(_plugin, logger);
 
+            logger.LogDebug($"Plugin {_plugin.FilePath} (ID {_plugin.Id}) will handle download of package {identity} for package source {_packageSource.Source}.");
+
             await _utilities.DoOncePerPluginLifetimeAsync(
                 MessageMethod.SetLogLevel.ToString(),
                 () => SetLogLevelAsync(logger, cancellationToken),
