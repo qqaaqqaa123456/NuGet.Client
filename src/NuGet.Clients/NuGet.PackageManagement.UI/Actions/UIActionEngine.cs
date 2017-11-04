@@ -71,7 +71,7 @@ namespace NuGet.PackageManagement.UI
 
             await PerformActionImplAsync(
                 uiService,
-                () =>
+                (sourceCacheContext) =>
                 {
                     var projects = uiService.Projects;
 
@@ -86,7 +86,9 @@ namespace NuGet.PackageManagement.UI
                         uiService.DependencyBehavior,
                         includePrelease,
                         includeUnlisted,
-                        VersionConstraints.None);
+                        VersionConstraints.None,
+                        new GatherCache(),
+                        sourceCacheContext);
 
                     return GetActionsAsync(
                         uiService,
@@ -98,9 +100,9 @@ namespace NuGet.PackageManagement.UI
                         projectContext: uiService.ProjectContext,
                         token: token);
                 },
-                (actions) =>
+                (actions, sourceCacheContext) =>
                 {
-                    return ExecuteActionsAsync(actions, uiService.ProjectContext, uiService.CommonOperations, userAction, token);
+                    return ExecuteActionsAsync(actions, uiService.ProjectContext, uiService.CommonOperations, userAction, sourceCacheContext, token);
                 },
                 operationType,
                 token);
@@ -117,14 +119,14 @@ namespace NuGet.PackageManagement.UI
         {
             await PerformActionImplAsync(
                 uiService,
-                () =>
+                (sourceCacheContext) =>
                 {
                     return ResolveActionsForUpdateAsync(
                         uiService,
                         packagesToUpdate,
                         token);
                 },
-                async (actions) =>
+                async (actions, sourceCacheContext) =>
                 {
                     // Get all Nuget projects and actions and call ExecuteNugetProjectActions once for all the projects.
                     var nugetProjects = actions.Select(action => action.Project);
@@ -133,6 +135,7 @@ namespace NuGet.PackageManagement.UI
                         nugetProjects,
                         nugetActions,
                         uiService.ProjectContext,
+                        sourceCacheContext,
                         token);
                 },
                 NuGetOperationType.Update,
@@ -159,26 +162,30 @@ namespace NuGet.PackageManagement.UI
             var includePrerelease = packagesToUpdate.Where(
                 package => package.Version.IsPrerelease).Any();
 
-            var resolutionContext = new ResolutionContext(
-                uiService.DependencyBehavior,
-                includePrelease: includePrerelease,
-                includeUnlisted: true,
-                versionConstraints: VersionConstraints.None,
-                gatherCache: gatherCache);
+            using (var sourceCacheContext = new SourceCacheContext())
+            {
+                var resolutionContext = new ResolutionContext(
+                    uiService.DependencyBehavior,
+                    includePrelease: includePrerelease,
+                    includeUnlisted: true,
+                    versionConstraints: VersionConstraints.None,
+                    gatherCache: gatherCache,
+                    sourceCacheContext: sourceCacheContext);
 
-            var secondarySources = _sourceProvider.GetRepositories().Where(e => e.PackageSource.IsEnabled);
+                var secondarySources = _sourceProvider.GetRepositories().Where(e => e.PackageSource.IsEnabled);
 
-            var actions = await _packageManager.PreviewUpdatePackagesAsync(
-                packagesToUpdate,
-                uiService.Projects,
-                resolutionContext,
-                uiService.ProjectContext,
-                uiService.ActiveSources,
-                secondarySources,
-                token);
+                var actions = await _packageManager.PreviewUpdatePackagesAsync(
+                    packagesToUpdate,
+                    uiService.Projects,
+                    resolutionContext,
+                    uiService.ProjectContext,
+                    uiService.ActiveSources,
+                    secondarySources,
+                    token);
 
-            resolvedActions.AddRange(actions.Select(action => new ResolvedAction(action.Project, action))
-                .ToList());
+                resolvedActions.AddRange(actions.Select(action => new ResolvedAction(action.Project, action))
+                    .ToList());
+            }
 
             return resolvedActions;
         }
@@ -192,8 +199,8 @@ namespace NuGet.PackageManagement.UI
         /// the project actions.</param>
         private async Task PerformActionImplAsync(
             INuGetUI uiService,
-            Func<Task<IReadOnlyList<ResolvedAction>>> resolveActionsAsync,
-            Func<IReadOnlyList<ResolvedAction>, Task> executeActionsAsync,
+            Func<SourceCacheContext, Task<IReadOnlyList<ResolvedAction>>> resolveActionsAsync,
+            Func<IReadOnlyList<ResolvedAction>, SourceCacheContext, Task> executeActionsAsync,
             NuGetOperationType operationType,
             CancellationToken token)
         {
@@ -220,76 +227,79 @@ namespace NuGet.PackageManagement.UI
 
                     TelemetryUtility.StartorResumeTimer();
 
-                    var actions = await resolveActionsAsync();
-                    var results = GetPreviewResults(actions);
-
-                    if (operationType == NuGetOperationType.Uninstall)
+                    using (var sourceCacheContext = new SourceCacheContext())
                     {
-                        packageCount = results.SelectMany(result => result.Deleted).
-                            Select(package => package.Id).Distinct().Count();
-                    }
-                    else
-                    {
-                        var addCount = results.SelectMany(result => result.Added).
-                            Select(package => package.Id).Distinct().Count();
+                        var actions = await resolveActionsAsync(sourceCacheContext);
+                        var results = GetPreviewResults(actions);
 
-                        var updateCount = results.SelectMany(result => result.Updated).
-                            Select(result => result.New.Id).Distinct().Count();
-
-                        // update packages count
-                        packageCount = addCount + updateCount;
-
-                        if (updateCount > 0)
+                        if (operationType == NuGetOperationType.Uninstall)
                         {
-                            // set operation type to update when there are packages being updated
-                            operationType = NuGetOperationType.Update;
+                            packageCount = results.SelectMany(result => result.Deleted).
+                                Select(package => package.Id).Distinct().Count();
                         }
-                    }
-
-                    TelemetryUtility.StopTimer();
-
-                    // Show the preview window.
-                    if (uiService.DisplayPreviewWindow)
-                    {
-                        var shouldContinue = uiService.PromptForPreviewAcceptance(results);
-                        if (!shouldContinue)
+                        else
                         {
-                            return;
+                            var addCount = results.SelectMany(result => result.Added).
+                                Select(package => package.Id).Distinct().Count();
+
+                            var updateCount = results.SelectMany(result => result.Updated).
+                                Select(result => result.New.Id).Distinct().Count();
+
+                            // update packages count
+                            packageCount = addCount + updateCount;
+
+                            if (updateCount > 0)
+                            {
+                                // set operation type to update when there are packages being updated
+                                operationType = NuGetOperationType.Update;
+                            }
                         }
-                    }
 
-                    TelemetryUtility.StartorResumeTimer();
+                        TelemetryUtility.StopTimer();
 
-                    // Show the license acceptance window.
-                    var accepted = await CheckLicenseAcceptanceAsync(uiService, results, token);
-
-                    TelemetryUtility.StartorResumeTimer();
-
-                    if (!accepted)
-                    {
-                        return;
-                    }
-
-                    // Warn about the fact that the "dotnet" TFM is deprecated.
-                    if (uiService.DisplayDeprecatedFrameworkWindow)
-                    {
-                        var shouldContinue = ShouldContinueDueToDotnetDeprecation(uiService, actions, token);
+                        // Show the preview window.
+                        if (uiService.DisplayPreviewWindow)
+                        {
+                            var shouldContinue = uiService.PromptForPreviewAcceptance(results);
+                            if (!shouldContinue)
+                            {
+                                return;
+                            }
+                        }
 
                         TelemetryUtility.StartorResumeTimer();
 
-                        if (!shouldContinue)
+                        // Show the license acceptance window.
+                        var accepted = await CheckLicenseAcceptanceAsync(uiService, results, token);
+
+                        TelemetryUtility.StartorResumeTimer();
+
+                        if (!accepted)
                         {
                             return;
                         }
-                    }
 
-                    if (!token.IsCancellationRequested)
-                    {
-                        // execute the actions
-                        await executeActionsAsync(actions);
+                        // Warn about the fact that the "dotnet" TFM is deprecated.
+                        if (uiService.DisplayDeprecatedFrameworkWindow)
+                        {
+                            var shouldContinue = ShouldContinueDueToDotnetDeprecation(uiService, actions, token);
 
-                        // fires ActionsExecuted event to update the UI
-                        uiService.OnActionsExecuted(actions);
+                            TelemetryUtility.StartorResumeTimer();
+
+                            if (!shouldContinue)
+                            {
+                                return;
+                            }
+                        }
+
+                        if (!token.IsCancellationRequested)
+                        {
+                            // execute the actions
+                            await executeActionsAsync(actions, sourceCacheContext);
+
+                            // fires ActionsExecuted event to update the UI
+                            uiService.OnActionsExecuted(actions);
+                        }
                     }
                 }
                 catch (System.Net.Http.HttpRequestException ex)
@@ -461,7 +471,8 @@ namespace NuGet.PackageManagement.UI
             IEnumerable<ResolvedAction> actions,
             INuGetProjectContext projectContext, 
             ICommonOperations commonOperations,
-            UserAction userAction, 
+            UserAction userAction,
+            SourceCacheContext sourceCacheContext,
             CancellationToken token)
         {
             var processedDirectInstalls = new HashSet<PackageIdentity>(PackageIdentity.Comparer);
@@ -475,7 +486,7 @@ namespace NuGet.PackageManagement.UI
                     NuGetPackageManager.SetDirectInstall(directInstall, projectContext);
                     processedDirectInstalls.Add(directInstall);
                 }
-                await _packageManager.ExecuteNuGetProjectActionsAsync(projectActions.Key, nuGetProjectActions, projectContext, token);
+                await _packageManager.ExecuteNuGetProjectActionsAsync(projectActions.Key, nuGetProjectActions, projectContext, sourceCacheContext, token);
                 NuGetPackageManager.ClearDirectInstall(projectContext);
             }
         }

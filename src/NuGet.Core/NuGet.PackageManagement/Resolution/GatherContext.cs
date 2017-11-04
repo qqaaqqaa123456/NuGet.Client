@@ -74,8 +74,6 @@ namespace NuGet.PackageManagement
         /// </summary>
         public bool IsUpdateAll { get; set; }
 
-        public SourceCacheContext SourceCacheContext { get; set; }
-
         /// <summary>
         /// Logging adapter
         /// </summary>

@@ -63,7 +63,7 @@ namespace NuGet.Protocol.Tests
                         "A",
                         includePrerelease: false,
                         includeUnlisted: false,
-                        sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                        sourceCacheContext: NullSourceCacheContext.Instance,
                         log: testLogger,
                         token: CancellationToken.None))
                         .ToList();
@@ -121,7 +121,7 @@ namespace NuGet.Protocol.Tests
                         "A",
                         includePrerelease: true,
                         includeUnlisted: false,
-                        sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                        sourceCacheContext: NullSourceCacheContext.Instance,
                         log: testLogger,
                         token: CancellationToken.None))
                         .ToList();
@@ -179,7 +179,7 @@ namespace NuGet.Protocol.Tests
                         "A",
                         includePrerelease: false,
                         includeUnlisted: false,
-                        sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                        sourceCacheContext: NullSourceCacheContext.Instance,
                         log: testLogger,
                         token: CancellationToken.None))
                         .ToList();
@@ -211,7 +211,7 @@ namespace NuGet.Protocol.Tests
                         "A",
                         includePrerelease: false,
                         includeUnlisted: false,
-                        sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                        sourceCacheContext: NullSourceCacheContext.Instance,
                         log: testLogger,
                         token: CancellationToken.None))
                         .ToList();
@@ -287,7 +287,7 @@ namespace NuGet.Protocol.Tests
                         "A",
                         includePrerelease: true,
                         includeUnlisted: false,
-                        sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                        sourceCacheContext: NullSourceCacheContext.Instance,
                         log: testLogger,
                         token: CancellationToken.None))
                         .OrderByDescending(p => p.Identity.Version)
@@ -350,7 +350,7 @@ namespace NuGet.Protocol.Tests
                 // Act
                 var result = await resource.GetMetadataAsync(
                     new PackageIdentity("A", new NuGetVersion("1.0.0")),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     log: testLogger,
                     token: CancellationToken.None);
 
@@ -395,7 +395,7 @@ namespace NuGet.Protocol.Tests
                 // Act
                 var result = await resource.GetMetadataAsync(
                     new PackageIdentity("A", new NuGetVersion("2.0.0")),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     log: testLogger,
                     token: CancellationToken.None);
 

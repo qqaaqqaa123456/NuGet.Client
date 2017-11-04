@@ -36,7 +36,7 @@ namespace NuGet.Protocol.Tests
             // Act
             var dependencyInfoList = await dependencyInfoResource.ResolvePackages("WindowsAzure.Storage",
                                                                             NuGetFramework.Parse("aspnetcore50"),
-                                                                            It.IsAny<SourceCacheContext>(),
+                                                                            NullSourceCacheContext.Instance,
                                                                             NullLogger.Instance,
                                                                             CancellationToken.None);
 
@@ -66,7 +66,7 @@ namespace NuGet.Protocol.Tests
             // Act
             var dependencyInfo = await dependencyInfoResource.ResolvePackage(packageIdentity,
                                                                             NuGetFramework.Parse("aspnetcore50"),
-                                                                            It.IsAny<SourceCacheContext>(),
+                                                                            NullSourceCacheContext.Instance,
                                                                             NullLogger.Instance,
                                                                             CancellationToken.None);
 
@@ -94,7 +94,7 @@ namespace NuGet.Protocol.Tests
             var dep2 = new PackageIdentity("xunit.assert", NuGetVersion.Parse("2.1.0-beta1-build2945"));
 
             // Act
-            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), It.IsAny<SourceCacheContext>(), Common.NullLogger.Instance, CancellationToken.None);
+            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), NullSourceCacheContext.Instance, Common.NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(package, result, PackageIdentity.Comparer);
@@ -124,7 +124,7 @@ namespace NuGet.Protocol.Tests
             var filterRange = new VersionRange(NuGetVersion.Parse("2.0.0-rc4-build2924"), true, NuGetVersion.Parse("2.1.0-beta1-build2945"), true);
 
             // Act
-            var results = await dependencyInfoResource.ResolvePackages("xunit", NuGetFramework.Parse("net45"), It.IsAny<SourceCacheContext>(), Common.NullLogger.Instance, CancellationToken.None);
+            var results = await dependencyInfoResource.ResolvePackages("xunit", NuGetFramework.Parse("net45"), NullSourceCacheContext.Instance, Common.NullLogger.Instance, CancellationToken.None);
 
             var filtered = results.Where(result => filterRange.Satisfies(result.Version));
 
@@ -157,7 +157,7 @@ namespace NuGet.Protocol.Tests
             var package = new PackageIdentity("xunit", NuGetVersion.Parse("1.0.0-notfound"));
 
             // Act
-            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), It.IsAny<SourceCacheContext>(), Common.NullLogger.Instance, CancellationToken.None);
+            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), NullSourceCacheContext.Instance, Common.NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Null(result);
@@ -179,7 +179,7 @@ namespace NuGet.Protocol.Tests
             var dependencyInfoResource = await repo.GetResourceAsync<DependencyInfoResource>();
 
             // Act
-            var results = await dependencyInfoResource.ResolvePackages("not-found", NuGetFramework.Parse("net45"), It.IsAny<SourceCacheContext>(), Common.NullLogger.Instance, CancellationToken.None);
+            var results = await dependencyInfoResource.ResolvePackages("not-found", NuGetFramework.Parse("net45"), NullSourceCacheContext.Instance, Common.NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(0, results.Count());
@@ -203,7 +203,7 @@ namespace NuGet.Protocol.Tests
             var package = new PackageIdentity("DotNetOpenAuth.Core", NuGetVersion.Parse("4.3.2.13293"));
 
             // Act
-            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), It.IsAny<SourceCacheContext>(), Common.NullLogger.Instance, CancellationToken.None);
+            var result = await dependencyInfoResource.ResolvePackage(package, NuGetFramework.Parse("net45"), NullSourceCacheContext.Instance, Common.NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(1, result.Dependencies.Count());

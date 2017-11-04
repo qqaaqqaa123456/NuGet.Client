@@ -43,22 +43,22 @@ namespace NuGet.DependencyResolver.Core.Tests
             
             // Source1 returns 1.0.0-beta.1
             var remoteProvider = new Mock<IRemoteDependencyProvider>();
-            remoteProvider.Setup(e => e.FindLibraryAsync(range, It.IsAny<NuGetFramework>(), It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.FindLibraryAsync(range, It.IsAny<NuGetFramework>(), NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(actualIdentity);
             remoteProvider.SetupGet(e => e.IsHttp).Returns(true);
             remoteProvider.SetupGet(e => e.Source).Returns(new PackageSource("test"));
-            remoteProvider.Setup(e => e.GetDependenciesAsync(It.IsAny<LibraryIdentity>(), It.IsAny<NuGetFramework>(), It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.GetDependenciesAsync(It.IsAny<LibraryIdentity>(), It.IsAny<NuGetFramework>(), NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(dependencyInfo)
                 .Callback(() => ++downloadCount);
             context.RemoteLibraryProviders.Add(remoteProvider.Object);
 
             // Source2 returns 1.0.0-beta.2
             var remoteProvider2 = new Mock<IRemoteDependencyProvider>();
-            remoteProvider2.Setup(e => e.FindLibraryAsync(range, It.IsAny<NuGetFramework>(), It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider2.Setup(e => e.FindLibraryAsync(range, It.IsAny<NuGetFramework>(), NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(higherIdentity);
             remoteProvider2.SetupGet(e => e.IsHttp).Returns(true);
             remoteProvider2.SetupGet(e => e.Source).Returns(new PackageSource("test"));
-            remoteProvider2.Setup(e => e.GetDependenciesAsync(It.IsAny<LibraryIdentity>(), It.IsAny<NuGetFramework>(), It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider2.Setup(e => e.GetDependenciesAsync(It.IsAny<LibraryIdentity>(), It.IsAny<NuGetFramework>(), NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(dependencyInfo2)
                 .Callback(() => ++downloadCount);
             context.RemoteLibraryProviders.Add(remoteProvider2.Object);
@@ -88,7 +88,7 @@ namespace NuGet.DependencyResolver.Core.Tests
             var dependencyInfo = LibraryDependencyInfo.Create(actualIdentity, framework, dependencies);
 
             var remoteProvider = new Mock<IRemoteDependencyProvider>();
-            remoteProvider.Setup(e => e.FindLibraryAsync(range, framework, It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.FindLibraryAsync(range, framework, NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(actualIdentity);
             remoteProvider.SetupGet(e => e.IsHttp).Returns(true);
             remoteProvider.SetupGet(e => e.Source).Returns(new PackageSource("test"));
@@ -99,7 +99,7 @@ namespace NuGet.DependencyResolver.Core.Tests
                 .ThrowsAsync(new PackageNotFoundProtocolException(new PackageIdentity(actualIdentity.Name, actualIdentity.Version)))
                 .Callback(() => ++hitCount);
 
-            remoteProvider.Setup(e => e.GetDependenciesAsync(actualIdentity, framework, It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.GetDependenciesAsync(actualIdentity, framework, NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(dependencyInfo)
                 .Callback(() => ++hitCount);
 
@@ -129,14 +129,14 @@ namespace NuGet.DependencyResolver.Core.Tests
             var dependencyInfo = LibraryDependencyInfo.Create(actualIdentity, framework, dependencies);
 
             var remoteProvider = new Mock<IRemoteDependencyProvider>();
-            remoteProvider.Setup(e => e.FindLibraryAsync(range, framework, It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.FindLibraryAsync(range, framework, NullSourceCacheContext.Instance, testLogger, token))
                 .ReturnsAsync(actualIdentity);
             remoteProvider.SetupGet(e => e.IsHttp).Returns(true);
             remoteProvider.SetupGet(e => e.Source).Returns(new PackageSource("test"));
 
             var hitCount = 0;
 
-            remoteProvider.Setup(e => e.GetDependenciesAsync(actualIdentity, framework, It.IsAny<SourceCacheContext>(), testLogger, token))
+            remoteProvider.Setup(e => e.GetDependenciesAsync(actualIdentity, framework, NullSourceCacheContext.Instance, testLogger, token))
                 .ThrowsAsync(new PackageNotFoundProtocolException(new PackageIdentity(actualIdentity.Name, actualIdentity.Version)))
                 .Callback(() => ++hitCount);
 

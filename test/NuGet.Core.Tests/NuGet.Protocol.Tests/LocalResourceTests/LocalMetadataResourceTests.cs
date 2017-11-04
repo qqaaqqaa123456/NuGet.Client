@@ -35,7 +35,7 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalMetadataResource(localResource);
 
                 // Act
-                var result = (await resource.GetVersions("a", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None))
+                var result = (await resource.GetVersions("a", NullSourceCacheContext.Instance, testLogger, CancellationToken.None))
                     .OrderBy(v => v)
                     .ToList();
 
@@ -66,11 +66,11 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalMetadataResource(localResource);
 
                 // Act
-                var resultA = (await resource.GetVersions("a", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None))
+                var resultA = (await resource.GetVersions("a", NullSourceCacheContext.Instance, testLogger, CancellationToken.None))
                     .OrderBy(v => v)
                     .ToList();
 
-                var resultB = (await resource.GetVersions("b", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None))
+                var resultB = (await resource.GetVersions("b", NullSourceCacheContext.Instance, testLogger, CancellationToken.None))
                     .OrderBy(v => v)
                     .ToList();
 
@@ -105,7 +105,7 @@ namespace NuGet.Protocol.Tests
                     "b",
                     includePrerelease: false,
                     includeUnlisted: false,
-                    sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                    sourceCacheContext: NullSourceCacheContext.Instance,
                     log: testLogger,
                     token: CancellationToken.None);
 
@@ -139,7 +139,7 @@ namespace NuGet.Protocol.Tests
                     "b",
                     includePrerelease: true,
                     includeUnlisted: false,
-                    sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                    sourceCacheContext: NullSourceCacheContext.Instance,
                     log: testLogger,
                     token: CancellationToken.None);
 
@@ -173,7 +173,7 @@ namespace NuGet.Protocol.Tests
                     new string[] { "a", "b", "c" },
                     includePrerelease: false,
                     includeUnlisted: false,
-                    sourceCacheContext: It.IsAny<SourceCacheContext>(),
+                    sourceCacheContext: NullSourceCacheContext.Instance,
                     log: testLogger,
                     token: CancellationToken.None))
                     .OrderBy(e => e.Key)
@@ -209,9 +209,9 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalMetadataResource(localResource);
 
                 // Act
-                var a = await resource.Exists("A", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var b = await resource.Exists("b", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var c = await resource.Exists("c", It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
+                var a = await resource.Exists("A", NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var b = await resource.Exists("b", NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var c = await resource.Exists("c", NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
 
                 // Assert
                 Assert.True(a);
@@ -240,11 +240,11 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalMetadataResource(localResource);
 
                 // Act
-                var b1 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1")), It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var b2 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1+githash.0faef")), It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var b3 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1+githash.aaaa")), It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var b4 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1-githash.0faef")), It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
-                var b5 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.01")), It.IsAny<SourceCacheContext>(), testLogger, CancellationToken.None);
+                var b1 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1")), NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var b2 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1+githash.0faef")), NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var b3 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1+githash.aaaa")), NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var b4 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.1-githash.0faef")), NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
+                var b5 = await resource.Exists(new PackageIdentity("b", NuGetVersion.Parse("2.0.01")), NullSourceCacheContext.Instance, testLogger, CancellationToken.None);
 
                 // Assert
                 Assert.True(b1);

@@ -71,7 +71,7 @@ namespace NuGet.Protocol
 
                 // Retrieve the registration blob
                 var singleVersion = new VersionRange(minVersion: package.Version, includeMinVersion: true, maxVersion: package.Version, includeMaxVersion: true);
-                var regInfo = await ResolverMetadataClient.GetRegistrationInfo(_client, uri, singleVersion, cacheContext, projectFramework, log, token);
+                var regInfo = await ResolverMetadataClient.GetRegistrationInfo(_client, uri, package.Id, singleVersion, cacheContext, projectFramework, log, token);
 
                 // regInfo is null if the server returns a 404 for the package to indicate that it does not exist
                 if (regInfo != null)
@@ -109,7 +109,7 @@ namespace NuGet.Protocol
                 var uri = _regResource.GetUri(packageId);
 
                 // Retrieve the registration blob
-                var regInfo = await ResolverMetadataClient.GetRegistrationInfo(_client, uri, VersionRange.All, cacheContext, projectFramework, log, token);
+                var regInfo = await ResolverMetadataClient.GetRegistrationInfo(_client, uri, packageId, VersionRange.All, cacheContext, projectFramework, log, token);
 
                 // regInfo is null if the server returns a 404 for the package to indicate that it does not exist
                 if (regInfo != null)
@@ -147,7 +147,7 @@ namespace NuGet.Protocol
                 var uri = _regResource.GetUri(packageId);
 
                 // Retrieve the registration blob
-                return ResolverMetadataClient.GetDependencies(_client, uri, VersionRange.All, cacheContext, log, token);
+                return ResolverMetadataClient.GetDependencies(_client, uri, packageId, VersionRange.All, cacheContext, log, token);
             }
             catch (Exception ex)
             {

@@ -29,12 +29,13 @@ namespace NuGet.Protocol
         public static async Task<IEnumerable<RemoteSourceDependencyInfo>> GetDependencies(
             HttpSource httpClient,
             Uri registrationUri,
+            string packageId,
             VersionRange range,
             SourceCacheContext cacheContext,
             ILogger log,
             CancellationToken token)
         {
-            var ranges = await Utils.LoadRanges(httpClient, registrationUri, range, cacheContext, log, token);
+            var ranges = await Utils.LoadRanges(httpClient, registrationUri, packageId, range, cacheContext, log, token);
 
             var results = new HashSet<RemoteSourceDependencyInfo>();
             foreach (var rangeObj in ranges)
@@ -116,6 +117,7 @@ namespace NuGet.Protocol
         public static async Task<RegistrationInfo> GetRegistrationInfo(
             HttpSource httpClient,
             Uri registrationUri,
+            string packageId,
             VersionRange range,
             SourceCacheContext cacheContext,
             NuGetFramework projectTargetFramework,
@@ -124,7 +126,7 @@ namespace NuGet.Protocol
         {
             var frameworkComparer = new NuGetFrameworkFullComparer();
             var frameworkReducer = new FrameworkReducer();
-            var dependencies = await GetDependencies(httpClient, registrationUri, range, cacheContext, log, token);
+            var dependencies = await GetDependencies(httpClient, registrationUri, packageId, range, cacheContext, log, token);
 
             var result = new HashSet<RegistrationInfo>();
             var registrationInfo = new RegistrationInfo();

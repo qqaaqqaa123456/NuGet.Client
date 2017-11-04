@@ -238,7 +238,7 @@ namespace NuGet.Commands.Test
             dependencyProvider
                 .Setup(x => x.GetPackageDownloaderAsync(
                     It.IsAny<PackageIdentity>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .Callback<PackageIdentity, SourceCacheContext, ILogger, CancellationToken>(

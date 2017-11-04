@@ -28,20 +28,20 @@ namespace NuGet.Protocol
         public async static Task<IEnumerable<JObject>> LoadRanges(
             HttpSource httpSource,
             Uri registrationUri,
+            string packageId,
             VersionRange range,
             SourceCacheContext cacheContext,
             ILogger log,
             CancellationToken token)
         {
-            var httpSourceCacheContext = HttpSourceCacheContext.Create(cacheContext, 0);
+            var packageIdLowerCase = packageId.ToLowerInvariant();
 
-            var parts = registrationUri.OriginalString.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            var packageId = parts[parts.Length - 2];
+            var httpSourceCacheContext = HttpSourceCacheContext.Create(cacheContext, 0);
 
             var index = await httpSource.GetAsync(
                 new HttpSourceCachedRequest(
                     registrationUri.OriginalString,
-                    $"list_{packageId}_index",
+                    $"list_{packageIdLowerCase}_index",
                     httpSourceCacheContext)
                 {
                     IgnoreNotFounds = true,
@@ -76,7 +76,7 @@ namespace NuGet.Protocol
                         rangeTasks.Add(httpSource.GetAsync(
                             new HttpSourceCachedRequest(
                                 rangeUri,
-                                $"list_{packageId}_range_{lower.ToNormalizedString()}-{upper.ToNormalizedString()}",
+                                $"list_{packageIdLowerCase}_range_{lower.ToNormalizedString()}-{upper.ToNormalizedString()}",
                                 httpSourceCacheContext)
                             {
                                 IgnoreNotFounds = true,

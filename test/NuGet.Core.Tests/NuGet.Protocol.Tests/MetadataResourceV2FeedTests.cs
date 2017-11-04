@@ -34,7 +34,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var latestVersion = await metadataResource.GetLatestVersion("WindowsAzure.Storage", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var latestVersion = await metadataResource.GetLatestVersion("WindowsAzure.Storage", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("6.2.2-preview", latestVersion.ToNormalizedString());
@@ -56,7 +56,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var latestVersion = await metadataResource.GetLatestVersion("WindowsAzure.Storage", false, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var latestVersion = await metadataResource.GetLatestVersion("WindowsAzure.Storage", false, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("6.2.0", latestVersion.ToNormalizedString());
@@ -78,7 +78,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var versions = await metadataResource.GetVersions("WindowsAzure.Storage", false, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var versions = await metadataResource.GetVersions("WindowsAzure.Storage", false, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(34, versions.Count());
@@ -100,7 +100,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var versions = await metadataResource.GetVersions("WindowsAzure.Storage", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var versions = await metadataResource.GetVersions("WindowsAzure.Storage", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(44, versions.Count());
@@ -122,7 +122,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var exist = await metadataResource.Exists("WindowsAzure.Storage", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var exist = await metadataResource.Exists("WindowsAzure.Storage", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.True(exist);
@@ -147,7 +147,7 @@ namespace NuGet.Protocol.Tests
             var package = new PackageIdentity("WindowsAzure.Storage", new NuGetVersion("4.3.2-preview"));
 
             // Act
-            var exist = await metadataResource.Exists(package, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var exist = await metadataResource.Exists(package, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.True(exist);
@@ -175,7 +175,7 @@ namespace NuGet.Protocol.Tests
             var packageIdList = new List<string>() { "WindowsAzure.Storage", "xunit" };
 
             // Act
-            var versions = (await metadataResource.GetLatestVersions(packageIdList, true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None)).ToList();
+            var versions = (await metadataResource.GetLatestVersions(packageIdList, true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None)).ToList();
 
             // Assert
             Assert.Equal("WindowsAzure.Storage", versions[1].Key);
@@ -201,7 +201,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var latestVersion = await metadataResource.GetLatestVersion("not-found", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var latestVersion = await metadataResource.GetLatestVersion("not-found", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Null(latestVersion);
@@ -224,7 +224,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var versions = await metadataResource.GetVersions("not-found", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var versions = await metadataResource.GetVersions("not-found", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(0, versions.Count());
@@ -250,7 +250,7 @@ namespace NuGet.Protocol.Tests
             var package = new PackageIdentity("xunit", new NuGetVersion("1.0.0-notfound"));
 
             // Act
-            var exist = await metadataResource.Exists(package, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var exist = await metadataResource.Exists(package, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.False(exist);
@@ -273,7 +273,7 @@ namespace NuGet.Protocol.Tests
             var metadataResource = await repo.GetResourceAsync<MetadataResource>();
 
             // Act
-            var exist = await metadataResource.Exists("not-found", true, false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var exist = await metadataResource.Exists("not-found", true, false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.False(exist);

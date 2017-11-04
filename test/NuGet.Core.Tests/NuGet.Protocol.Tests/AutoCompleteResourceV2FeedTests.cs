@@ -54,7 +54,7 @@ namespace NuGet.Protocol.Tests
             var autoCompleteResource = await repo.GetResourceAsync<AutoCompleteResource>();
 
             // Act
-            var result = await autoCompleteResource.VersionStartsWith("xunit", "1", false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var result = await autoCompleteResource.VersionStartsWith("xunit", "1", false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(6, result.Count());
@@ -75,7 +75,7 @@ namespace NuGet.Protocol.Tests
             var autoCompleteResource = await repo.GetResourceAsync<AutoCompleteResource>();
 
             // Act
-            var result = await autoCompleteResource.VersionStartsWith("azure", "1", false, It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var result = await autoCompleteResource.VersionStartsWith("azure", "1", false, NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal(0, result.Count());

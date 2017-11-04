@@ -174,7 +174,7 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalAutoCompleteResource(localResource);
 
                 // Act
-                var versions = (await resource.VersionStartsWith("packageA", string.Empty, includePrerelease: true, sourceCacheContext: It.IsAny<SourceCacheContext>(), log: testLogger, token: CancellationToken.None)).ToList();
+                var versions = (await resource.VersionStartsWith("packageA", string.Empty, includePrerelease: true, sourceCacheContext: NullSourceCacheContext.Instance, log: testLogger, token: CancellationToken.None)).ToList();
 
                 // Assert
                 Assert.Equal(2, versions.Count);
@@ -202,7 +202,7 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalAutoCompleteResource(localResource);
 
                 // Act
-                var versions = (await resource.VersionStartsWith("packageA", "1.0", includePrerelease: true, sourceCacheContext: It.IsAny<SourceCacheContext>(), log: testLogger, token: CancellationToken.None)).ToList();
+                var versions = (await resource.VersionStartsWith("packageA", "1.0", includePrerelease: true, sourceCacheContext: NullSourceCacheContext.Instance, log: testLogger, token: CancellationToken.None)).ToList();
 
                 // Assert
                 Assert.Equal(1, versions.Count);
@@ -229,7 +229,7 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalAutoCompleteResource(localResource);
 
                 // Act
-                var versions = (await resource.VersionStartsWith("packageA", "1.1.0-alpha.1.2.3+a.b", includePrerelease: true, sourceCacheContext: It.IsAny<SourceCacheContext>(), log: testLogger, token: CancellationToken.None)).ToList();
+                var versions = (await resource.VersionStartsWith("packageA", "1.1.0-alpha.1.2.3+a.b", includePrerelease: true, sourceCacheContext: NullSourceCacheContext.Instance, log: testLogger, token: CancellationToken.None)).ToList();
 
                 // Assert
                 Assert.Equal(1, versions.Count);
@@ -256,7 +256,7 @@ namespace NuGet.Protocol.Tests
                 var resource = new LocalAutoCompleteResource(localResource);
 
                 // Act
-                var versions = (await resource.VersionStartsWith("packageA", "1.1.0-alpha.1.2.3+a.b", includePrerelease: false, sourceCacheContext: It.IsAny<SourceCacheContext>(), log: testLogger, token: CancellationToken.None)).ToList();
+                var versions = (await resource.VersionStartsWith("packageA", "1.1.0-alpha.1.2.3+a.b", includePrerelease: false, sourceCacheContext: NullSourceCacheContext.Instance, log: testLogger, token: CancellationToken.None)).ToList();
 
                 // Assert
                 Assert.Equal(0, versions.Count);
@@ -280,7 +280,7 @@ namespace NuGet.Protocol.Tests
 
                 // Act
                 var ids = (await resource.IdStartsWith(string.Empty, includePrerelease: true, log: testLogger, token: CancellationToken.None)).ToList();
-                var versions = (await resource.VersionStartsWith(string.Empty, string.Empty, includePrerelease: true, sourceCacheContext: It.IsAny<SourceCacheContext>(), log: testLogger, token: CancellationToken.None)).ToList();
+                var versions = (await resource.VersionStartsWith(string.Empty, string.Empty, includePrerelease: true, sourceCacheContext: NullSourceCacheContext.Instance, log: testLogger, token: CancellationToken.None)).ToList();
 
                 // Assert
                 Assert.Equal(0, ids.Count);

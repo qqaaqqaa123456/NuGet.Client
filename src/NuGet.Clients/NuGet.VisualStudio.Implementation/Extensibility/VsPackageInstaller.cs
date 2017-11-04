@@ -448,12 +448,6 @@ namespace NuGet.VisualStudio
             {
                 DependencyBehavior depBehavior = ignoreDependencies ? DependencyBehavior.Ignore : DependencyBehavior.Lowest;
 
-                ResolutionContext resolution = new ResolutionContext(
-                    depBehavior,
-                    includePrerelease,
-                    includeUnlisted: false,
-                    versionConstraints: VersionConstraints.None);
-
                 var packageManager = CreatePackageManager(repoProvider);
 
                 // find the project
@@ -517,21 +511,25 @@ namespace NuGet.VisualStudio
 
             DependencyBehavior depBehavior = ignoreDependencies ? DependencyBehavior.Ignore : DependencyBehavior.Lowest;
 
-            ResolutionContext resolution = new ResolutionContext(
-                depBehavior,
-                includePrerelease,
-                includeUnlisted: false,
-                versionConstraints: VersionConstraints.None,
-                gatherCache: gatherCache);
+            using (var sourceCacheContext = new SourceCacheContext())
+            {
+                ResolutionContext resolution = new ResolutionContext(
+                    depBehavior,
+                    includePrerelease,
+                    includeUnlisted: false,
+                    versionConstraints: VersionConstraints.None,
+                    gatherCache: gatherCache,
+                    sourceCacheContext: sourceCacheContext);
 
-            // install the package
-            if (package.Version == null)
-            {
-                await packageManager.InstallPackageAsync(nuGetProject, package.Id, resolution, projectContext, sources, Enumerable.Empty<SourceRepository>(), token);
-            }
-            else
-            {
-                await packageManager.InstallPackageAsync(nuGetProject, package, resolution, projectContext, sources, Enumerable.Empty<SourceRepository>(), token);
+                // install the package
+                if (package.Version == null)
+                {
+                    await packageManager.InstallPackageAsync(nuGetProject, package.Id, resolution, projectContext, sources, Enumerable.Empty<SourceRepository>(), token);
+                }
+                else
+                {
+                    await packageManager.InstallPackageAsync(nuGetProject, package, resolution, projectContext, sources, Enumerable.Empty<SourceRepository>(), token);
+                }
             }
         }
 

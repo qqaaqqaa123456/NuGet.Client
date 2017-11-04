@@ -117,7 +117,7 @@ namespace NuGet.Protocol.FuncTest
             var parser = new V2FeedParser(httpSource, packageSource);
 
             // Act
-            var package = await parser.GetPackage(new PackageIdentity("owin", new NuGetVersion("1.0")), It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(new PackageIdentity("owin", new NuGetVersion("1.0")), NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("Owin", package.Id);
@@ -239,7 +239,7 @@ namespace NuGet.Protocol.FuncTest
             var parser = new V2FeedParser(httpSource, packageSource.Source);
 
             // Act
-            var package = await parser.GetPackage(new PackageIdentity("owin", new NuGetVersion("1.0")), It.IsAny<SourceCacheContext>(), NullLogger.Instance, CancellationToken.None);
+            var package = await parser.GetPackage(new PackageIdentity("owin", new NuGetVersion("1.0")), NullSourceCacheContext.Instance, NullLogger.Instance, CancellationToken.None);
 
             // Assert
             Assert.Equal("Owin", package.Id);

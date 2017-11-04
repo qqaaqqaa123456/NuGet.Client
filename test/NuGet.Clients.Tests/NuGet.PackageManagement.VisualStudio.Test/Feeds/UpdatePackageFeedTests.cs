@@ -248,7 +248,7 @@ namespace NuGet.PackageManagement.VisualStudio.Test
                     .Build());
 
             Mock.Get(_metadataResource)
-                .Setup(x => x.GetMetadataAsync(id, It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<SourceCacheContext>(), It.IsAny<Common.ILogger>(), It.IsAny<CancellationToken>()))
+                .Setup(x => x.GetMetadataAsync(id, It.IsAny<bool>(), It.IsAny<bool>(), NullSourceCacheContext.Instance, It.IsAny<Common.ILogger>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(metadata));
         }
     }

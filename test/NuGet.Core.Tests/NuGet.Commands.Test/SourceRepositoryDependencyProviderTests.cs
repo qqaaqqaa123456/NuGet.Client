@@ -173,7 +173,7 @@ namespace NuGet.Commands.Test
             var findResource = new Mock<FindPackageByIdResource>();
             findResource.Setup(s => s.GetAllVersionsAsync(
                     It.IsAny<string>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { NuGetVersion.Parse("1.0.0"), NuGetVersion.Parse("2.0.0") });
@@ -181,7 +181,7 @@ namespace NuGet.Commands.Test
             findResource.Setup(s => s.GetDependencyInfoAsync(
                     It.IsAny<string>(),
                     It.IsAny<NuGetVersion>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new PackageNotFoundProtocolException(new PackageIdentity("x", NuGetVersion.Parse("1.0.0"))));
@@ -224,7 +224,7 @@ namespace NuGet.Commands.Test
             var findResource = new Mock<FindPackageByIdResource>();
             findResource.Setup(s => s.GetAllVersionsAsync(
                     It.IsAny<string>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { NuGetVersion.Parse("1.0.0-beta"), NuGetVersion.Parse("2.0.0") });
@@ -232,7 +232,7 @@ namespace NuGet.Commands.Test
             findResource.Setup(s => s.GetDependencyInfoAsync(
                     It.IsAny<string>(),
                     It.IsAny<NuGetVersion>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new FindPackageByIdDependencyInfo(
@@ -283,7 +283,7 @@ namespace NuGet.Commands.Test
             findResource.Setup(s => s.GetDependencyInfoAsync(
                     It.IsAny<string>(),
                     It.IsAny<NuGetVersion>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new FindPackageByIdDependencyInfo(
@@ -423,7 +423,7 @@ namespace NuGet.Commands.Test
             var findResource = new Mock<FindPackageByIdResource>();
             findResource.Setup(s => s.GetAllVersionsAsync(
                     It.IsAny<string>(),
-                    It.IsAny<SourceCacheContext>(),
+                    NullSourceCacheContext.Instance,
                     It.IsAny<ILogger>(),
                     It.IsAny<CancellationToken>()))
                 .ReturnsAsync(new[] { NuGetVersion.Parse("1.0.0-beta"), NuGetVersion.Parse("2.0.0") })
